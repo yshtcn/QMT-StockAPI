@@ -1,0 +1,394 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "股票数据API（单一端点版）",
+    "version": "v2.1.0",
+    "description": "通过一个端点 /api/instant_query 提供实时与K线数据。是否仅返回实时由 only_realtime 控制；是否返回K线由是否传入 periods 决定；K线时可用 include_realtime 夹带实时摘要。"
+  },
+  "servers": [
+    {
+      "url": "https://stockapi.yshtcn.com"
+    }
+  ],
+  "paths": {
+    "/api/instant_query": {
+      "get": {
+        "operationId": "instantQuery",
+        "summary": "查询实时或K线数据",
+        "description": "当 only_realtime=true 且未提供 periods 时，仅返回实时数据；当提供 periods 时，返回对应周期的K线数据，并可由 include_realtime 控制是否附带实时摘要。",
+        "parameters": [
+          {
+            "name": "stock_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "examples": [
+                "000002.SZ",
+                "000001.SH"
+              ]
+            },
+            "description": "股票/指数代码（如 000002.SZ, 000001.SH）"
+          },
+          {
+            "name": "periods",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "60m",
+                "1d",
+                "1w",
+                "1M"
+              ]
+            },
+            "description": "K线周期；留空表示不取K线"
+          },
+          {
+            "name": "preview_limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2000,
+              "default": 180
+            },
+            "description": "K线返回条数（仅在传入 periods 时生效）"
+          },
+          {
+            "name": "dividend_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "front",
+                "back",
+                "none"
+              ],
+              "default": "front"
+            },
+            "description": "复权类型（仅在传入 periods 时生效）"
+          },
+          {
+            "name": "include_realtime",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "description": "当请求K线（提供 periods）时，是否附带实时摘要"
+          },
+          {
+            "name": "only_realtime",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "为 true 且未提供 periods 时，仅返回实时数据块"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/RealTimeResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/KLineResponse"
+                    }
+                  ]
+                },
+                "examples": {
+                  "realtime_only": {
+                    "summary": "仅实时（与线上示例一致）",
+                    "value": {
+                      "stock_info": {
+                        "stock_code": "000002.SZ",
+                        "stock_name": "万科A"
+                      },
+                      "price_data": {
+                        "current_price": 12.34,
+                        "pre_close": 12.1,
+                        "open_price": 12.2,
+                        "high_price": 12.56,
+                        "low_price": 12.05,
+                        "change": 0.24,
+                        "change_pct": 1.98,
+                        "amplitude": 4.22
+                      },
+                      "trading_data": {
+                        "volume": 123456,
+                        "amount": 9876543.21
+                      },
+                      "time_info": {
+                        "update_time": "2025-09-05 09:45:00",
+                        "system_time": "2025-09-05 09:45:01"
+                      }
+                    }
+                  },
+                  "kline_with_realtime": {
+                    "summary": "K线并附带实时",
+                    "value": {
+                      "metadata": {
+                        "stock_code": "000002.SZ",
+                        "period": "15m",
+                        "dividend_type": "front",
+                        "data_count": 5,
+                        "export_time": "2025-09-05 09:45:00"
+                      },
+                      "time_range": {
+                        "start_time": "2025-09-04 14:15:00",
+                        "end_time": "2025-09-05 09:45:00"
+                      },
+                      "kline_data": [
+                        {
+                          "datetime": "2025-09-05 09:45:00",
+                          "open": 12.3,
+                          "high": 12.56,
+                          "low": 12.28,
+                          "close": 12.34,
+                          "volume": 12345,
+                          "amount": 1523456
+                        }
+                      ],
+                      "realtime": {
+                        "stock_info": {
+                          "stock_code": "000002.SZ",
+                          "stock_name": "万科A"
+                        },
+                        "price_data": {
+                          "current_price": 12.34,
+                          "pre_close": 12.1,
+                          "open_price": 12.2,
+                          "high_price": 12.56,
+                          "low_price": 12.05,
+                          "change": 0.24,
+                          "change_pct": 1.98,
+                          "amplitude": 4.22
+                        },
+                        "trading_data": {
+                          "volume": 123456,
+                          "amount": 9876543.21
+                        },
+                        "time_info": {
+                          "update_time": "2025-09-05 09:45:00",
+                          "system_time": "2025-09-05 09:45:01"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StockInfo": {
+        "type": "object",
+        "properties": {
+          "stock_code": {
+            "type": "string"
+          },
+          "stock_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "stock_code"
+        ]
+      },
+      "RealTimeBlock": {
+        "type": "object",
+        "properties": {
+          "current_price": {
+            "type": "number"
+          },
+          "pre_close": {
+            "type": "number"
+          },
+          "open_price": {
+            "type": "number"
+          },
+          "high_price": {
+            "type": "number"
+          },
+          "low_price": {
+            "type": "number"
+          },
+          "change": {
+            "type": "number"
+          },
+          "change_pct": {
+            "type": "number"
+          },
+          "amplitude": {
+            "type": "number"
+          }
+        }
+      },
+      "TradingBlock": {
+        "type": "object",
+        "properties": {
+          "volume": {
+            "type": "number"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      },
+      "TimeInfo": {
+        "type": "object",
+        "properties": {
+          "update_time": {
+            "type": "string"
+          },
+          "system_time": {
+            "type": "string"
+          }
+        }
+      },
+      "RealTimeResponse": {
+        "type": "object",
+        "properties": {
+          "stock_info": {
+            "$ref": "#/components/schemas/StockInfo"
+          },
+          "price_data": {
+            "$ref": "#/components/schemas/RealTimeBlock"
+          },
+          "trading_data": {
+            "$ref": "#/components/schemas/TradingBlock"
+          },
+          "time_info": {
+            "$ref": "#/components/schemas/TimeInfo"
+          }
+        },
+        "required": [
+          "stock_info",
+          "price_data",
+          "time_info"
+        ]
+      },
+      "KLineItem": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number"
+          },
+          "datetime": {
+            "type": "string"
+          },
+          "open": {
+            "type": "number"
+          },
+          "high": {
+            "type": "number"
+          },
+          "low": {
+            "type": "number"
+          },
+          "close": {
+            "type": "number"
+          },
+          "volume": {
+            "type": "number"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "change": {
+            "type": "number"
+          },
+          "change_pct": {
+            "type": "number"
+          },
+          "amplitude": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "datetime",
+          "open",
+          "high",
+          "low",
+          "close"
+        ]
+      },
+      "MetaBlock": {
+        "type": "object",
+        "properties": {
+          "stock_code": {
+            "type": "string"
+          },
+          "period": {
+            "type": "string"
+          },
+          "dividend_type": {
+            "type": "string"
+          },
+          "data_count": {
+            "type": "integer"
+          },
+          "export_time": {
+            "type": "string"
+          }
+        }
+      },
+      "TimeRange": {
+        "type": "object",
+        "properties": {
+          "start_time": {
+            "type": "string"
+          },
+          "end_time": {
+            "type": "string"
+          }
+        }
+      },
+      "KLineResponse": {
+        "type": "object",
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/MetaBlock"
+          },
+          "time_range": {
+            "$ref": "#/components/schemas/TimeRange"
+          },
+          "kline_data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KLineItem"
+            }
+          },
+          "realtime": {
+            "$ref": "#/components/schemas/RealTimeResponse",
+            "description": "当 include_realtime=true 时返回"
+          }
+        },
+        "required": [
+          "metadata",
+          "kline_data"
+        ]
+      }
+    }
+  }
+}

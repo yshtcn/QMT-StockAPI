@@ -1,0 +1,7 @@
+Flask==2.3.3
+Flask-CORS==4.0.0
+pandas==2.0.3
+Jinja2==3.1.2
+numpy>=1.21.0
+openpyxl>=3.0.0
+xlsxwriter>=3.0.0 
